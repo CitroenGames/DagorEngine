@@ -51,14 +51,17 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     # C++ specific flags
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fconserve-space -Wno-invalid-offsetof")
 
-    # Sanitizer support
-    if(NOT DAGOR_SANITIZE STREQUAL "disabled")
-        add_compile_options(-fsanitize=${DAGOR_SANITIZE})
-        if(DAGOR_SANITIZE STREQUAL "thread")
-            add_compile_definitions(__SANITIZE_THREAD__)
+    # Sanitizer support (from gcc-sets.jam)
+    # Only add sanitizer flags if DAGOR_SANITIZE is defined and enabled
+    if(DEFINED DAGOR_SANITIZE AND NOT "${DAGOR_SANITIZE}" STREQUAL "disabled")
+        if(NOT "${DAGOR_SANITIZE}" STREQUAL "")
+            add_compile_options(-fsanitize=${DAGOR_SANITIZE})
+            if("${DAGOR_SANITIZE}" STREQUAL "thread")
+                add_compile_definitions(__SANITIZE_THREAD__)
+            endif()
+            string(APPEND CMAKE_EXE_LINKER_FLAGS " -fsanitize=${DAGOR_SANITIZE}")
+            string(APPEND CMAKE_SHARED_LINKER_FLAGS " -fsanitize=${DAGOR_SANITIZE}")
         endif()
-        string(APPEND CMAKE_EXE_LINKER_FLAGS " -fsanitize=${DAGOR_SANITIZE}")
-        string(APPEND CMAKE_SHARED_LINKER_FLAGS " -fsanitize=${DAGOR_SANITIZE}")
     endif()
 
     # Exception handling
