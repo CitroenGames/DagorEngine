@@ -8,9 +8,10 @@ project(DagorEngine
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Platform)
 
-# Platform and shader system detection
+# Platform, shader, and dependency system detection
 include(DagorPlatform)
 include(DagorShaders)
+include(DagorDependencies)
 
 # Global settings from defaults.jam
 set(CMAKE_CXX_STANDARD ${DAGOR_CPP_STD})
@@ -20,6 +21,11 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Default configuration
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Dev" CACHE STRING "Choose the type of build (Dev;Rel;IRel;Dbg)" FORCE)
+endif()
+
+# Validate build type
+if(NOT CMAKE_BUILD_TYPE IN_LIST DAGOR_BUILD_CONFIGS)
+    message(FATAL_ERROR "Invalid build type: ${CMAKE_BUILD_TYPE}. Must be one of: ${DAGOR_BUILD_CONFIGS}")
 endif()
 
 # Global variables (from defaults.jam)
