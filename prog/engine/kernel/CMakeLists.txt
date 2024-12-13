@@ -1,4 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
+project(DagorKernel)
+
+include(DagorFunctions)
+include(DagorDependencies)
 
 # Common source files
 set(KERNEL_SOURCES
@@ -76,6 +80,12 @@ dagor_add_library(NAME kernel
     SOURCES ${KERNEL_SOURCES}
     INCLUDES
         ${CMAKE_SOURCE_DIR}/prog/engine/sharedInclude
+        ${CMAKE_SOURCE_DIR}/prog/engine/kernel
+        ${CMAKE_SOURCE_DIR}/prog/engine/debug
+        ${CMAKE_SOURCE_DIR}/third_party/EASTL/include
+        ${CMAKE_SOURCE_DIR}/third_party/EABase/include/Common
+    LIBRARIES
+        EASTL
 )
 
 # Add compiler definitions

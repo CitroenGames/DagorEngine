@@ -1,0 +1,2 @@
+/usr/bin/ar qc ../../../lib/Rel/libkernel.a CMakeFiles/kernel.dir/fatalerr.cpp.o CMakeFiles/kernel.dir/kernelGlobalSetting.cpp.o CMakeFiles/kernel.dir/globalVars/occlusion_map.cpp.o CMakeFiles/kernel.dir/globalVars/hdrMode.cpp.o CMakeFiles/kernel.dir/cdebug.c.o CMakeFiles/kernel.dir/debugDumpStack.cpp.o CMakeFiles/kernel.dir/logimpl.cpp.o CMakeFiles/kernel.dir/writeStream.cpp.o CMakeFiles/kernel.dir/cpuControl.cpp.o CMakeFiles/kernel.dir/perfTimer.cpp.o
+/usr/bin/ranlib ../../../lib/Rel/libkernel.a

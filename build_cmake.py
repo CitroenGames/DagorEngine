@@ -130,6 +130,12 @@ def build_project(project: str, components: List[str], build_dir: str, args: arg
     """Build a specific project."""
     # Map project names to their directories
     project_paths = {
+        'engine_kernel': 'prog/engine/kernel',
+        'engine_baseUtil': 'prog/engine/baseUtil',
+        'engine_startup': 'prog/engine/startup',
+        'engine_generic': 'prog/engine/generic',
+        'engine_osApiWrappers': 'prog/engine/osApiWrappers',
+        'engine_ioSys': 'prog/engine/ioSys',
         'ShaderCompiler2': 'prog/tools/ShaderCompiler2',
         'dagorTools': 'prog/tools',
         'dargbox': 'prog/tools/dargbox',
@@ -225,7 +231,12 @@ def main():
     components = args.components or ['code', 'shaders', 'assets', 'vromfs', 'gui']
 
     # Set default projects if none specified
-    projects = args.projects or ['dagorTools', 'dargbox', 'physTest', 'skiesSample', 'testGI', 'outerSpace', 'dngSceneViewer']
+    projects = args.projects or [
+        'engine_kernel', 'engine_baseUtil', 'engine_startup', 'engine_generic',
+        'engine_osApiWrappers', 'engine_ioSys', 'ShaderCompiler2',
+        'dagorTools', 'dargbox', 'physTest', 'skiesSample', 'testGI',
+        'outerSpace', 'dngSceneViewer'
+    ]
 
     # Create build directory
     build_dir = os.path.join(DAGOR_ROOT_FOLDER, 'build')

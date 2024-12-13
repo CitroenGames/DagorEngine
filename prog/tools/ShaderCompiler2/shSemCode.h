@@ -271,3 +271,5 @@ private:
 #undef codemem
 
 void clear_shared_stcode_cache();
+
+DAG_DECLARE_RELOCATABLE(ShaderSemCode::Var);

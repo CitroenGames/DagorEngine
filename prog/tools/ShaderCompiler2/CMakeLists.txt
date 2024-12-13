@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(ShaderCompiler2 LANGUAGES CXX)
 
 # Include Dagor dependencies and platform configuration
+include(DagorFunctions)
 include(DagorDependencies)
 include(DagorPlatform)
 
@@ -128,14 +129,18 @@ dagor_add_executable(
     INCLUDES
         ${CMAKE_SOURCE_DIR}
         ${CMAKE_SOURCE_DIR}/prog
-        ${CMAKE_SOURCE_DIR}/prog/dagorInclude
         ${CMAKE_SOURCE_DIR}/prog/1stPartyLibs
+        ${CMAKE_SOURCE_DIR}/prog/1stPartyLibs/dag
         ${CMAKE_SOURCE_DIR}/prog/3rdPartyLibs
         ${CMAKE_SOURCE_DIR}/prog/3rdPartyLibs/vulkan/include
-        ${CMAKE_SOURCE_DIR}/prog/gameLibs/publicInclude
+        ${CMAKE_SOURCE_DIR}/prog/dagorInclude
+        ${CMAKE_SOURCE_DIR}/prog/engine
+        ${CMAKE_SOURCE_DIR}/prog/engine/sharedInclude
+        ${CMAKE_SOURCE_DIR}/prog/engine/startup
+        ${CMAKE_SOURCE_DIR}/prog/engine/generic
+        ${CMAKE_SOURCE_DIR}/prog/engine/drv/3d
         ${CMAKE_SOURCE_DIR}/prog/tools/ShaderCompiler2
         ${CMAKE_SOURCE_DIR}/prog/tools/sharedInclude
-        ${CMAKE_SOURCE_DIR}/prog/engine/sharedInclude
     USE_PROG_LIBS
         3rdPartyLibs/eastl
         engine/osApiWrappers

@@ -21,9 +21,15 @@ project(DagorEngine
     LANGUAGES C CXX)
 
 # Include additional configuration modules
+include(CommonCppFlags)
 include(DagorShaders)
 include(DagorDependencies)
 include(DagorFunctions)
+
+# EASTL configuration options
+option(EASTL_EXCEPTIONS "Enable exception handling in EASTL" ${DAGOR_EXCEPTIONS})
+option(EASTL_RTTI "Enable RTTI in EASTL" ON)
+option(EASTL_STACK_PROTECTION "Enable stack protection in EASTL" ${DAGOR_STACK_PROTECTION})
 
 # Apply global settings from DagorDependencies
 set(CMAKE_CXX_STANDARD ${DAGOR_CPP_STD})
@@ -124,5 +130,7 @@ if(DAGOR_COPY_DXC_LIB AND DAGOR_PLATFORM STREQUAL "windows")
     )
 endif()
 
-# Add subdirectories (to be populated later)
+# Add subdirectories
+add_subdirectory(prog/engine/kernel)
+add_subdirectory(prog/engine/baseUtil)
 add_subdirectory(prog/tools/ShaderCompiler2)

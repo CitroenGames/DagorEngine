@@ -23,17 +23,18 @@ set(DAGOR_MATH_OPTION "fast" CACHE STRING "Math precision (fast/precise/strict)"
 set_property(CACHE DAGOR_MATH_OPTION PROPERTY STRINGS fast precise strict)
 
 # EASTL Configuration
-set(EABASE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/third_party/EABase/include/Common")
-set(EASTL_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/third_party/EASTL/include")
-set(EASTL_LIBRARY_DIR "${CMAKE_SOURCE_DIR}/third_party/EASTL/build")
+set(DAGOR_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/../..")
+set(EABASE_INCLUDE_DIR "${DAGOR_ROOT_DIR}/third_party/EABase/include/Common")
+set(EASTL_INCLUDE_DIR "${DAGOR_ROOT_DIR}/third_party/EASTL/include")
+set(EASTL_LIBRARY_DIR "${DAGOR_ROOT_DIR}/third_party/EASTL/build")
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/third_party/EASTL/cmake")
+list(APPEND CMAKE_MODULE_PATH "${DAGOR_ROOT_DIR}/third_party/EASTL/cmake")
 include_directories(${EABASE_INCLUDE_DIR})
 include_directories(${EASTL_INCLUDE_DIR})
 link_directories(${EASTL_LIBRARY_DIR})
 
 if(NOT TARGET EASTL)
-    add_subdirectory(${CMAKE_SOURCE_DIR}/third_party/EASTL EXCLUDE_FROM_ALL)
+    add_subdirectory("${DAGOR_ROOT_DIR}/third_party/EASTL" "${CMAKE_BINARY_DIR}/third_party/EASTL" EXCLUDE_FROM_ALL)
 endif()
 
 # Platform-specific compiler flags

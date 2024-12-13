@@ -30,6 +30,11 @@ dagor_add_library(NAME baseUtil
     SOURCES ${BASEUTIL_SOURCES}
     INCLUDES
         ${CMAKE_SOURCE_DIR}/prog/engine/sharedInclude
+        ${CMAKE_SOURCE_DIR}/third_party/EASTL/include
+        ${CMAKE_SOURCE_DIR}/third_party/EABase/include/Common
+    LIBRARIES
+        kernel
+        EASTL
 )
 
 # Add compiler definitions
