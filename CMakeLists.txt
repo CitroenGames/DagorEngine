@@ -1,15 +1,18 @@
 cmake_minimum_required(VERSION 3.20)
+
+# Include custom modules early
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Platform)
+
+# Include platform detection and configuration early
+include(DagorPlatform)
+
 project(DagorEngine
     VERSION 1.0.0
     DESCRIPTION "Dagor Game Engine"
     LANGUAGES C CXX)
 
-# Include custom modules
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Platform)
-
-# Platform, shader, and dependency system detection
-include(DagorPlatform)
+# Include additional configuration modules
 include(DagorShaders)
 include(DagorDependencies)
 
