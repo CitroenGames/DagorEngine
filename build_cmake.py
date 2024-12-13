@@ -64,14 +64,22 @@ def run_per_platform(cmds_windows=[], cmds_macOS=[], cmds_linux=[], cwd='.', env
 
 def configure_cmake(build_dir: str, source_dir: str, options: List[str]) -> bool:
     """Configure CMake build."""
+    # Ensure build directory exists
+    os.makedirs(build_dir, exist_ok=True)
+
     cmake_cmd = ['cmake', '-B', build_dir, '-S', source_dir]
-    cmake_cmd.extend(options)
+
+    # Add custom module path
+    cmake_cmd.extend(['-DCMAKE_MODULE_PATH=' + os.path.join(DAGOR_ROOT_FOLDER, 'cmake/Modules')])
 
     # Add platform-specific options
     if DAGOR_HOST == 'windows':
         cmake_cmd.extend(['-G', 'Visual Studio 17 2022', '-A', 'x64'])
     else:
         cmake_cmd.extend(['-G', 'Ninja'])
+
+    # Add user-provided options
+    cmake_cmd.extend(options)
 
     return run(cmake_cmd)
 
