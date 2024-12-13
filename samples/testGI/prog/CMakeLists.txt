@@ -171,6 +171,35 @@ if(DAGOR_PLATFORM STREQUAL "windows" AND
     set(USE_MEMORY_DEBUG_LEVEL "dbg")
 endif()
 
+# Shader compilation configuration
+set(SHADER_SOURCES
+    shaders/gi.hlsl
+    shaders/giSpirV.hlsl
+)
+
+# Add shader compilation targets
+dagor_add_shader_variants(
+    TARGET test_gi_shaders
+    SOURCES ${SHADER_SOURCES}
+    INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/shaders
+)
+
+# Ensure shaders are built before the main target
+add_dependencies(${TARGET_NAME} test_gi_shaders)
+
+# Configure shader output directory
+set(SHADER_OUTPUT_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/shaders/testGI-game")
+
+# Copy compiled shaders to output directory
+if(DAGOR_PLATFORM STREQUAL "windows")
+    add_custom_command(
+        TARGET ${TARGET_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_BINARY_DIR}/shaders"
+        "${SHADER_OUTPUT_DIR}"
+    )
+endif()
+
 # Create executable
 dagor_add_executable(
     NAME ${TARGET_NAME}

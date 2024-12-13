@@ -193,6 +193,35 @@ elseif(DAGOR_PLATFORM STREQUAL "nswitch")
     endforeach()
 endif()
 
+# Shader compilation configuration
+set(SHADER_SOURCES
+    shaders/skies.hlsl
+    shaders/skiesSpirV.hlsl
+)
+
+# Add shader compilation targets
+dagor_add_shader_variants(
+    TARGET skies_sample_shaders
+    SOURCES ${SHADER_SOURCES}
+    INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/shaders
+)
+
+# Ensure shaders are built before the main target
+add_dependencies(skiesSample skies_sample_shaders)
+
+# Configure shader output directory
+set(SHADER_OUTPUT_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/shaders/skiesSample-game")
+
+# Copy compiled shaders to output directory
+if(DAGOR_PLATFORM STREQUAL "windows")
+    add_custom_command(
+        TARGET skiesSample POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_BINARY_DIR}/shaders"
+        "${SHADER_OUTPUT_DIR}"
+    )
+endif()
+
 # Add executable target
 dagor_add_executable(
     NAME skiesSample

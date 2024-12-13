@@ -141,6 +141,35 @@ if(VR_DEVICE_SUPPORT)
     )
 endif()
 
+# Shader compilation configuration
+set(SHADER_SOURCES
+    shaders/scene.hlsl
+    shaders/sceneSpirV.hlsl
+)
+
+# Add shader compilation targets
+dagor_add_shader_variants(
+    TARGET dng_scene_viewer_shaders
+    SOURCES ${SHADER_SOURCES}
+    INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/shaders
+)
+
+# Ensure shaders are built before the main target
+add_dependencies(${GAME_NAME} dng_scene_viewer_shaders)
+
+# Configure shader output directory
+set(SHADER_OUTPUT_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/shaders/dngSceneViewer-game")
+
+# Copy compiled shaders to output directory
+if(DAGOR_PLATFORM STREQUAL "windows")
+    add_custom_command(
+        TARGET ${GAME_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_BINARY_DIR}/shaders"
+        "${SHADER_OUTPUT_DIR}"
+    )
+endif()
+
 # Create executable
 dagor_add_executable(
     NAME ${GAME_NAME}
