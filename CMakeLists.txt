@@ -23,6 +23,7 @@ project(DagorEngine
 # Include additional configuration modules
 include(DagorShaders)
 include(DagorDependencies)
+include(DagorFunctions)
 
 # Apply global settings from DagorDependencies
 set(CMAKE_CXX_STANDARD ${DAGOR_CPP_STD})
