@@ -62,6 +62,7 @@ function(dagor_set_common_properties target)
     target_include_directories(${target} PUBLIC ${DAGOR_GLOBAL_INCLUDES})
 
     if(DAGOR_PLATFORM_SPEC STREQUAL "gcc")
+        # Common compiler flags from gcc-sets.jam
         target_compile_options(${target} PRIVATE
             -pipe
             -msse${DAGOR_SSE_VERSION}
@@ -89,37 +90,72 @@ function(dagor_set_common_properties target)
             -Wno-stringop-overflow
             -Wno-stringop-overread
         )
-    endif()
 
-    if(DAGOR_USE_LTO_JOBS)
-        set_target_properties(${target} PROPERTIES
-            INTERPROCEDURAL_OPTIMIZATION TRUE
+        # Platform-specific definitions
+        target_compile_definitions(${target} PRIVATE
+            __forceinline=inline\ __attribute__\(\(always_inline\)\)
+            __cdecl=
+            __stdcall=
+            __fastcall=
+            _POSIX_C_SOURCE=200809L
+            _GNU_SOURCE
+            _snprintf=snprintf
+            _vsnprintf=vsnprintf
+            "stricmp=strcasecmp"
+            "strnicmp=strncasecmp"
+            _TARGET_PC=3
+            _TARGET_PC_LINUX=3
+            _TARGET_64BIT=1
+            __LINUX__=64
+            _TARGET_SIMD_SSE=${DAGOR_SSE_VERSION}
+            "i_strlen=(int)strlen"
+            __STDC_CONSTANT_MACROS
         )
-        if(DAGOR_PLATFORM_SPEC STREQUAL "gcc")
+
+        # Static library configuration
+        if(DAGOR_KERNEL_LINKAGE STREQUAL "static")
+            target_compile_definitions(${target} PRIVATE _TARGET_STATIC_LIB=1)
+        endif()
+
+        # Exception handling
+        if(NOT DAGOR_EXCEPTIONS)
+            target_compile_options(${target} PRIVATE -fno-exceptions)
+        else()
+            target_compile_options(${target} PRIVATE -fexceptions)
+            target_compile_definitions(${target} PRIVATE DAGOR_EXCEPTIONS_ENABLED=1)
+        endif()
+
+        # RTTI support
+        if(NOT DAGOR_RTTI)
+            target_compile_options(${target} PRIVATE -fno-rtti)
+        else()
+            target_compile_options(${target} PRIVATE -frtti)
+        endif()
+
+        # Sanitizer support
+        if(DAGOR_SANITIZE AND NOT DAGOR_SANITIZE STREQUAL "disabled")
+            target_compile_options(${target} PRIVATE -fsanitize=${DAGOR_SANITIZE})
+            target_link_options(${target} PRIVATE -fsanitize=${DAGOR_SANITIZE})
+            if(DAGOR_SANITIZE STREQUAL "thread")
+                target_compile_definitions(${target} PRIVATE __SANITIZE_THREAD__)
+            endif()
+        endif()
+
+        # Link-time optimization
+        if(DAGOR_USE_LTO_JOBS)
             target_compile_options(${target} PRIVATE -flto=${DAGOR_USE_LTO_JOBS})
             target_link_options(${target} PRIVATE -flto=${DAGOR_USE_LTO_JOBS})
         endif()
-    endif()
 
-    if(NOT DAGOR_SANITIZE STREQUAL "disabled")
-        target_compile_options(${target} PRIVATE -fsanitize=${DAGOR_SANITIZE})
-        target_link_options(${target} PRIVATE -fsanitize=${DAGOR_SANITIZE})
-        if(DAGOR_SANITIZE STREQUAL "thread")
-            target_compile_definitions(${target} PRIVATE __SANITIZE_THREAD__)
+        # Strip configuration
+        if(NOT DAGOR_STRIP_TYPE STREQUAL "all")
+            target_link_options(${target} PRIVATE -rdynamic)
         endif()
-    endif()
 
-    if(NOT DAGOR_EXCEPTIONS)
-        target_compile_options(${target} PRIVATE -fno-exceptions)
-    else()
-        target_compile_options(${target} PRIVATE -fexceptions)
-        target_compile_definitions(${target} PRIVATE DAGOR_EXCEPTIONS_ENABLED=1)
-    endif()
-
-    if(NOT DAGOR_RTTI)
-        target_compile_options(${target} PRIVATE -fno-rtti)
-    else()
-        target_compile_options(${target} PRIVATE -frtti)
+        # Section garbage collection
+        if(NOT DAGOR_CHECK_ONLY)
+            target_link_options(${target} PRIVATE -Wl,--gc-sections)
+        endif()
     endif()
 endfunction()
 
