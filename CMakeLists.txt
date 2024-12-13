@@ -1,0 +1,131 @@
+cmake_minimum_required(VERSION 3.20)
+project(DagorEngine
+    VERSION 1.0.0
+    DESCRIPTION "Dagor Game Engine"
+    LANGUAGES C CXX)
+
+# Include custom modules
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Platform)
+
+# Platform and shader system detection
+include(DagorPlatform)
+include(DagorShaders)
+
+# Global settings from defaults.jam
+set(CMAKE_CXX_STANDARD ${DAGOR_CPP_STD})
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Default configuration
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Dev" CACHE STRING "Choose the type of build (Dev;Rel;IRel;Dbg)" FORCE)
+endif()
+
+# Global variables (from defaults.jam)
+set(DAGOR_CPP_STD "17" CACHE STRING "C++ Standard Version")
+set(DAGOR_KERNEL_LINKAGE "static" CACHE STRING "Kernel linkage type (static/dynamic)")
+set(DAGOR_SANITIZE "disabled" CACHE STRING "Sanitizer type (disabled/address/thread)")
+set(DAGOR_EXCEPTIONS "ON" CACHE BOOL "Enable C++ exceptions")
+set(DAGOR_RTTI "OFF" CACHE BOOL "Enable C++ RTTI")
+set(DAGOR_STACK_PROTECTION "ON" CACHE BOOL "Enable stack protection")
+
+# SSE Configuration (from defaults.jam)
+if(DAGOR_PLATFORM STREQUAL "windows" AND DAGOR_ARCH STREQUAL "x86_64")
+    set(DAGOR_SSE_VERSION "4" CACHE STRING "SSE Version")
+elseif(DAGOR_PLATFORM STREQUAL "linux" AND DAGOR_ARCH STREQUAL "x86_64")
+    set(DAGOR_SSE_VERSION "4" CACHE STRING "SSE Version")
+else()
+    set(DAGOR_SSE_VERSION "2" CACHE STRING "SSE Version")
+endif()
+
+# Math precision options (from defaults.jam)
+set(DAGOR_MATH_OPTION "fast" CACHE STRING "Math precision (fast/precise/strict)")
+set_property(CACHE DAGOR_MATH_OPTION PROPERTY STRINGS fast precise strict)
+
+# Output directory configuration
+if(DEFINED ENV{GOUT_ROOT})
+    set(DAGOR_OUTPUT_ROOT $ENV{GOUT_ROOT})
+else()
+    set(DAGOR_OUTPUT_ROOT "${CMAKE_SOURCE_DIR}/_output")
+endif()
+
+# Platform-specific definitions
+if(DAGOR_PLATFORM STREQUAL "windows")
+    add_compile_definitions(
+        _TARGET_PC=1
+        _TARGET_PC_WIN=1
+        WIN32_LEAN_AND_MEAN
+        _TARGET_64BIT=1
+    )
+elseif(DAGOR_PLATFORM STREQUAL "linux")
+    add_compile_definitions(
+        _TARGET_PC=3
+        _TARGET_PC_LINUX=3
+        _TARGET_64BIT=1
+        __LINUX__=64
+    )
+elseif(DAGOR_PLATFORM STREQUAL "macOS")
+    add_compile_definitions(
+        _TARGET_PC=2
+        _TARGET_PC_MACOSX=2
+        _TARGET_APPLE=1
+        _TARGET_64BIT=1
+        __MACOSX__=1
+    )
+endif()
+
+# Conditional settings based on build type
+if(CMAKE_BUILD_TYPE STREQUAL "Dbg")
+    set(DAGOR_EXCEPTIONS "ON")
+    set(DAGOR_STACK_PROTECTION "ON")
+    add_compile_definitions(DAGOR_DBGLEVEL=2)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Dev")
+    set(DAGOR_EXCEPTIONS "ON")
+    add_compile_definitions(DAGOR_DBGLEVEL=1)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Rel")
+    set(DAGOR_EXCEPTIONS "OFF")
+    set(DAGOR_STACK_PROTECTION "OFF")
+    add_compile_definitions(DAGOR_DBGLEVEL=0 NDEBUG=1)
+elseif(CMAKE_BUILD_TYPE STREQUAL "IRel")
+    set(DAGOR_EXCEPTIONS "OFF")
+    set(DAGOR_STACK_PROTECTION "OFF")
+    add_compile_definitions(DAGOR_DBGLEVEL=-1 NDEBUG=1)
+endif()
+
+# Additional global compiler definitions
+if(DAGOR_EXCEPTIONS)
+    add_compile_definitions(_HAS_EXCEPTIONS=1)
+else()
+    add_compile_definitions(_HAS_EXCEPTIONS=0)
+endif()
+
+if(DAGOR_STACK_PROTECTION)
+    add_compile_definitions(_STACK_PROTECTION=1)
+endif()
+
+# Shader compilation configuration
+set(DAGOR_DXC_VERSION "1.7.2207" CACHE STRING "DXC compiler version")
+set(DAGOR_SHADER_DEBUG OFF CACHE BOOL "Enable shader debug information")
+set(DAGOR_COPY_DXC_LIB OFF CACHE BOOL "Copy DXC library to output directory")
+
+if(DAGOR_COPY_DXC_LIB AND DAGOR_PLATFORM STREQUAL "windows")
+    set(DXC_DIR "$ENV{DEVTOOL}/DXC-${DAGOR_DXC_VERSION}/lib/${DAGOR_PLATFORM_SUFFIX}")
+    if(NOT EXISTS "${DXC_DIR}")
+        message(FATAL_ERROR "DXC directory not found: ${DXC_DIR}")
+    endif()
+
+    set(DXC_LIBRARY "dxcompiler.dll")
+    if(DAGOR_PLATFORM STREQUAL "macOS")
+        set(DXC_LIBRARY "libdxcompiler.dylib")
+    endif()
+
+    configure_file(
+        "${DXC_DIR}/${DXC_LIBRARY}"
+        "${CMAKE_BINARY_DIR}/bin/${DXC_LIBRARY}"
+        COPYONLY
+    )
+endif()
+
+# Add subdirectories (to be populated later)
+add_subdirectory(prog/tools/ShaderCompiler2)
