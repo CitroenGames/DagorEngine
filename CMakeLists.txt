@@ -1,5 +1,13 @@
 cmake_minimum_required(VERSION 3.20)
 
+# Define valid build configurations first
+set(DAGOR_BUILD_CONFIGS
+    Dev     # Development build with debug info
+    Rel     # Release build
+    IRel    # Internal release build
+    Dbg     # Debug build
+)
+
 # Include custom modules early
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Platform)
@@ -16,7 +24,7 @@ project(DagorEngine
 include(DagorShaders)
 include(DagorDependencies)
 
-# Global settings from defaults.jam
+# Apply global settings from DagorDependencies
 set(CMAKE_CXX_STANDARD ${DAGOR_CPP_STD})
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -30,27 +38,6 @@ endif()
 if(NOT CMAKE_BUILD_TYPE IN_LIST DAGOR_BUILD_CONFIGS)
     message(FATAL_ERROR "Invalid build type: ${CMAKE_BUILD_TYPE}. Must be one of: ${DAGOR_BUILD_CONFIGS}")
 endif()
-
-# Global variables (from defaults.jam)
-set(DAGOR_CPP_STD "17" CACHE STRING "C++ Standard Version")
-set(DAGOR_KERNEL_LINKAGE "static" CACHE STRING "Kernel linkage type (static/dynamic)")
-set(DAGOR_SANITIZE "disabled" CACHE STRING "Sanitizer type (disabled/address/thread)")
-set(DAGOR_EXCEPTIONS "ON" CACHE BOOL "Enable C++ exceptions")
-set(DAGOR_RTTI "OFF" CACHE BOOL "Enable C++ RTTI")
-set(DAGOR_STACK_PROTECTION "ON" CACHE BOOL "Enable stack protection")
-
-# SSE Configuration (from defaults.jam)
-if(DAGOR_PLATFORM STREQUAL "windows" AND DAGOR_ARCH STREQUAL "x86_64")
-    set(DAGOR_SSE_VERSION "4" CACHE STRING "SSE Version")
-elseif(DAGOR_PLATFORM STREQUAL "linux" AND DAGOR_ARCH STREQUAL "x86_64")
-    set(DAGOR_SSE_VERSION "4" CACHE STRING "SSE Version")
-else()
-    set(DAGOR_SSE_VERSION "2" CACHE STRING "SSE Version")
-endif()
-
-# Math precision options (from defaults.jam)
-set(DAGOR_MATH_OPTION "fast" CACHE STRING "Math precision (fast/precise/strict)")
-set_property(CACHE DAGOR_MATH_OPTION PROPERTY STRINGS fast precise strict)
 
 # Output directory configuration
 if(DEFINED ENV{GOUT_ROOT})
