@@ -16,3 +16,15 @@
 *.das.inl
 *.dshl.log
 ShaderLog-*
+
+# CMake build artifacts
+/build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+*.cmake
+Makefile
+*.a
+*.o
+*.so
+*.dylib
