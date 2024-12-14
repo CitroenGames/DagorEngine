@@ -83,25 +83,76 @@ def run_per_platform(cmds_windows=[], cmds_macOS=[], cmds_linux=[], cwd='.', env
 
 def configure_cmake(build_dir: str, source_dir: str, options: List[str]) -> bool:
     """Configure CMake build."""
+    # Check if Ninja is available
+    ninja_available = False
+    try:
+        subprocess.run(['ninja', '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        ninja_available = True
+    except FileNotFoundError:
+        log_warning("Ninja build system not found, falling back to default generator")
+
+    # Clean CMake cache if it exists
+    cmake_cache = os.path.join(build_dir, 'CMakeCache.txt')
+    cmake_files = os.path.join(build_dir, 'CMakeFiles')
+    if os.path.exists(cmake_cache):
+        try:
+            os.remove(cmake_cache)
+            log_info(f"Removed existing CMakeCache.txt")
+        except Exception as e:
+            log_error(f"Failed to remove CMakeCache.txt: {e}")
+            return False
+    
+    if os.path.exists(cmake_files):
+        try:
+            import shutil
+            shutil.rmtree(cmake_files)
+            log_info(f"Removed existing CMakeFiles directory")
+        except Exception as e:
+            log_error(f"Failed to remove CMakeFiles directory: {e}")
+            return False
+
+    # Create build directory
     os.makedirs(build_dir, exist_ok=True)
 
-    # Set up CMake module paths
-    cmake_module_path = os.path.join(DAGOR_ROOT_FOLDER, 'cmake', 'Modules')
-    cmake_platform_path = os.path.join(DAGOR_ROOT_FOLDER, 'cmake', 'Platform')
-
-    # Combine module paths
+    # Set up CMake module paths - convert Windows paths to CMake format
+    cmake_module_path = os.path.join(DAGOR_ROOT_FOLDER, 'cmake', 'Modules').replace('\\', '/')
+    cmake_platform_path = os.path.join(DAGOR_ROOT_FOLDER, 'cmake', 'Platform').replace('\\', '/')
+    
+    # Use CMake list separator (;) with forward slashes
     combined_module_path = f"{cmake_module_path};{cmake_platform_path}"
 
-    # Base CMake command
-    cmake_cmd = [
-        'cmake',
-        '-B', build_dir,
-        '-S', source_dir,
-        f'-DCMAKE_MODULE_PATH={combined_module_path}',
-        '-G', 'Ninja'
-    ]
+    # Convert source and build paths to CMake format
+    build_dir = build_dir.replace('\\', '/')
+    source_dir = source_dir.replace('\\', '/')
 
-    # Add additional options
+    # Base CMake command
+    cmake_cmd = ['cmake', '-B', build_dir, '-S', source_dir]
+    
+    # Add compiler settings for Windows
+    if DAGOR_HOST == 'windows':
+        cmake_cmd.extend([
+            '-DCMAKE_C_COMPILER=cl',
+            '-DCMAKE_CXX_COMPILER=cl',
+            '-DCMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION=10.0'
+        ])
+        if not ninja_available:
+            cmake_cmd.extend(['-G', 'Visual Studio 17 2022', '-A', 'x64'])
+    else:
+        cmake_cmd.extend([
+            '-DCMAKE_C_COMPILER=gcc',
+            '-DCMAKE_CXX_COMPILER=g++'
+        ])
+        if not ninja_available:
+            cmake_cmd.extend(['-G', 'Unix Makefiles'])
+
+    # Add Ninja generator if available
+    if ninja_available:
+        cmake_cmd.extend(['-G', 'Ninja'])
+
+    # Add CMake module path and other options
+    cmake_cmd.extend([
+        f'-DCMAKE_MODULE_PATH={combined_module_path}'
+    ])
     cmake_cmd.extend(options)
 
     log_info(f"--- Running: {cmake_cmd} in {os.getcwd()}")
@@ -110,7 +161,14 @@ def configure_cmake(build_dir: str, source_dir: str, options: List[str]) -> bool
 def build_cmake(build_dir: str, config: str = 'Release') -> bool:
     """Build using CMake."""
     log_info(f"Building in {build_dir} with config {config}")
-    return run(['cmake', '--build', build_dir, '--config', config, '--parallel', str(multiprocessing.cpu_count())])
+    
+    # For Visual Studio builds, we need to specify the configuration differently
+    if DAGOR_HOST == 'windows':
+        return run(['cmake', '--build', build_dir, '--config', config, 
+                   '--parallel', str(multiprocessing.cpu_count())])
+    else:
+        return run(['cmake', '--build', build_dir, '--parallel', 
+                   str(multiprocessing.cpu_count())])
 
 def compile_shaders(project_dir: str, shader_dir: str) -> bool:
     """Compile shaders for the current platform."""
