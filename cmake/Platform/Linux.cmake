@@ -1,8 +1,15 @@
-# Linux platform-specific configuration
+# Platform specific configuration for Linux
 include_guard(GLOBAL)
 
 # Compiler settings
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    # Add compiler-specific include paths first
+    include_directories(SYSTEM
+        /usr/lib/gcc/x86_64-linux-gnu/11/include  # For intrinsics
+        /usr/include/x86_64-linux-gnu            # For system headers
+        /usr/include                             # For standard headers
+    )
+
     # Common compiler flags (from gcc-sets.jam)
     add_compile_options(
         -pipe
@@ -32,27 +39,26 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
         -Wno-stringop-overread
     )
 
-    # Definitions
+    # Platform definitions
     add_compile_definitions(
-        __forceinline=inline\ __attribute__\(\(always_inline\)\)
-        __cdecl=
-        __stdcall=
-        __fastcall=
         _POSIX_C_SOURCE=200809L
         _GNU_SOURCE
-        _snprintf=snprintf
-        _vsnprintf=vsnprintf
-        stricmp=strcasecmp
-        strnicmp=strncasecmp
-        i_strlen=(int)strlen
         __STDC_CONSTANT_MACROS
     )
+
+    # Configure platform header
+    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/include/platform)
+    configure_file(
+        ${CMAKE_CURRENT_LIST_DIR}/linux_platform.h
+        ${CMAKE_BINARY_DIR}/include/platform/linux_platform.h
+        COPYONLY
+    )
+    include_directories(BEFORE SYSTEM ${CMAKE_BINARY_DIR}/include/platform)
 
     # C++ specific flags
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fconserve-space -Wno-invalid-offsetof")
 
     # Sanitizer support (from gcc-sets.jam)
-    # Only add sanitizer flags if DAGOR_SANITIZE is defined and enabled
     if(DEFINED DAGOR_SANITIZE AND NOT "${DAGOR_SANITIZE}" STREQUAL "disabled")
         if(NOT "${DAGOR_SANITIZE}" STREQUAL "")
             add_compile_options(-fsanitize=${DAGOR_SANITIZE})
@@ -84,5 +90,19 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
         add_compile_options(-flto=${DAGOR_USE_LTO_JOBS})
         string(APPEND CMAKE_EXE_LINKER_FLAGS " -flto=${DAGOR_USE_LTO_JOBS}")
         string(APPEND CMAKE_SHARED_LINKER_FLAGS " -flto=${DAGOR_USE_LTO_JOBS}")
+    endif()
+
+    # Static linkage
+    if(DAGOR_KERNEL_LINKAGE STREQUAL "static")
+        add_compile_definitions(_TARGET_STATIC_LIB=1)
+    endif()
+
+    # Debug symbols and section garbage collection
+    if(NOT DAGOR_STRIP_TYPE STREQUAL "all")
+        string(APPEND CMAKE_EXE_LINKER_FLAGS " -rdynamic")
+    endif()
+
+    if(NOT DAGOR_CHECK_ONLY)
+        string(APPEND CMAKE_EXE_LINKER_FLAGS " -Wl,--gc-sections")
     endif()
 endif()

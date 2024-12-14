@@ -12,6 +12,11 @@ set(DAGOR_BUILD_CONFIGS
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Platform)
 
+# EASTL configuration options first
+option(EASTL_EXCEPTIONS "Enable exception handling in EASTL" ${DAGOR_EXCEPTIONS})
+option(EASTL_RTTI "Enable RTTI in EASTL" ON)
+option(EASTL_STACK_PROTECTION "Enable stack protection in EASTL" ${DAGOR_STACK_PROTECTION})
+
 # Include platform detection and configuration early
 include(DagorPlatform)
 
@@ -26,10 +31,15 @@ include(DagorShaders)
 include(DagorDependencies)
 include(DagorFunctions)
 
-# EASTL configuration options
-option(EASTL_EXCEPTIONS "Enable exception handling in EASTL" ${DAGOR_EXCEPTIONS})
-option(EASTL_RTTI "Enable RTTI in EASTL" ON)
-option(EASTL_STACK_PROTECTION "Enable stack protection in EASTL" ${DAGOR_STACK_PROTECTION})
+# Force include platform header for all targets
+if(DAGOR_PLATFORM STREQUAL "linux")
+    add_compile_options(-include ${CMAKE_BINARY_DIR}/include/platform/linux_platform.h)
+    include_directories(SYSTEM /usr/lib/gcc/x86_64-linux-gnu/11/include)
+elseif(DAGOR_PLATFORM STREQUAL "windows")
+    add_compile_options(/FI${CMAKE_BINARY_DIR}/include/platform/windows_platform.h)
+elseif(DAGOR_PLATFORM STREQUAL "macOS")
+    add_compile_options(-include ${CMAKE_BINARY_DIR}/include/platform/macos_platform.h)
+endif()
 
 # Apply global settings from DagorDependencies
 set(CMAKE_CXX_STANDARD ${DAGOR_CPP_STD})
@@ -96,13 +106,7 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "IRel")
     add_compile_definitions(DAGOR_DBGLEVEL=-1 NDEBUG=1)
 endif()
 
-# Additional global compiler definitions
-if(DAGOR_EXCEPTIONS)
-    add_compile_definitions(_HAS_EXCEPTIONS=1)
-else()
-    add_compile_definitions(_HAS_EXCEPTIONS=0)
-endif()
-
+# Stack protection configuration
 if(DAGOR_STACK_PROTECTION)
     add_compile_definitions(_STACK_PROTECTION=1)
 endif()
