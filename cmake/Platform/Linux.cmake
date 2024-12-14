@@ -3,13 +3,6 @@ include_guard(GLOBAL)
 
 # Compiler settings
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    # Add compiler-specific include paths first
-    include_directories(SYSTEM
-        /usr/lib/gcc/x86_64-linux-gnu/11/include  # For intrinsics
-        /usr/include/x86_64-linux-gnu            # For system headers
-        /usr/include                             # For standard headers
-    )
-
     # Common compiler flags (from gcc-sets.jam)
     add_compile_options(
         -pipe
@@ -45,15 +38,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         _GNU_SOURCE
         __STDC_CONSTANT_MACROS
     )
-
-    # Configure platform header
-    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/include/platform)
-    configure_file(
-        ${CMAKE_CURRENT_LIST_DIR}/linux_platform.h
-        ${CMAKE_BINARY_DIR}/include/platform/linux_platform.h
-        COPYONLY
-    )
-    include_directories(BEFORE SYSTEM ${CMAKE_BINARY_DIR}/include/platform)
 
     # C++ specific flags
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fconserve-space -Wno-invalid-offsetof")

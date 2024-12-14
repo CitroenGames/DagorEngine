@@ -16,6 +16,15 @@ set(DAGOR_PLATFORM_SPECS
     msvc    # Microsoft Visual C++
 )
 
+# SSE version configuration
+if(NOT DEFINED DAGOR_SSE_VERSION)
+    set(DAGOR_SSE_VERSION "2" CACHE STRING "SSE version (2/3/4)")
+endif()
+
+if(NOT DAGOR_SSE_VERSION MATCHES "^[234]$")
+    message(FATAL_ERROR "Invalid SSE version: ${DAGOR_SSE_VERSION}. Must be 2, 3, or 4")
+endif()
+
 # Detect host system
 if(WIN32)
     set(DAGOR_PLATFORM "windows")
@@ -36,6 +45,61 @@ elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64)$")
     set(DAGOR_ARCH "arm64")
 else()
     message(FATAL_ERROR "Unsupported architecture: ${CMAKE_SYSTEM_PROCESSOR}")
+endif()
+
+# Configure platform headers early
+set(PLATFORM_HEADER_DIR "${CMAKE_BINARY_DIR}/include")
+set(PLATFORM_PLATFORM_DIR "${PLATFORM_HEADER_DIR}/platform")
+
+# Create directories with full paths
+execute_process(
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/include"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/include/platform"
+)
+
+message(STATUS "Configuring platform headers in ${PLATFORM_PLATFORM_DIR}")
+message(STATUS "Source directory: ${CMAKE_SOURCE_DIR}")
+
+if(DAGOR_PLATFORM STREQUAL "linux")
+    set(PLATFORM_HEADER_SOURCE "${CMAKE_SOURCE_DIR}/cmake/Platform/linux_platform.h")
+    set(PLATFORM_HEADER_DEST "${CMAKE_BINARY_DIR}/include/platform/linux_platform.h")
+
+    if(NOT EXISTS "${PLATFORM_HEADER_SOURCE}")
+        message(FATAL_ERROR "Platform header source not found: ${PLATFORM_HEADER_SOURCE}")
+    endif()
+
+    execute_process(
+        COMMAND ${CMAKE_COMMAND} -E copy "${PLATFORM_HEADER_SOURCE}" "${PLATFORM_HEADER_DEST}"
+        RESULT_VARIABLE COPY_RESULT
+    )
+
+    if(NOT EXISTS "${PLATFORM_HEADER_DEST}")
+        message(FATAL_ERROR "Failed to copy platform header to: ${PLATFORM_HEADER_DEST}, Result: ${COPY_RESULT}")
+    endif()
+
+    message(STATUS "Generated linux_platform.h at ${PLATFORM_HEADER_DEST}")
+    include_directories(BEFORE SYSTEM
+        "${CMAKE_BINARY_DIR}/include"
+        /usr/lib/gcc/x86_64-linux-gnu/11/include
+        /usr/include/x86_64-linux-gnu
+        /usr/include
+    )
+elseif(DAGOR_PLATFORM STREQUAL "windows")
+    set(PLATFORM_HEADER_SOURCE "${CMAKE_SOURCE_DIR}/cmake/Platform/windows_platform.h")
+    set(PLATFORM_HEADER_DEST "${CMAKE_BINARY_DIR}/include/platform/windows_platform.h")
+    execute_process(
+        COMMAND ${CMAKE_COMMAND} -E copy "${PLATFORM_HEADER_SOURCE}" "${PLATFORM_HEADER_DEST}"
+    )
+    message(STATUS "Generated windows_platform.h")
+    include_directories(BEFORE SYSTEM "${CMAKE_BINARY_DIR}/include")
+elseif(DAGOR_PLATFORM STREQUAL "macOS")
+    set(PLATFORM_HEADER_SOURCE "${CMAKE_SOURCE_DIR}/cmake/Platform/macos_platform.h")
+    set(PLATFORM_HEADER_DEST "${CMAKE_BINARY_DIR}/include/platform/macos_platform.h")
+    execute_process(
+        COMMAND ${CMAKE_COMMAND} -E copy "${PLATFORM_HEADER_SOURCE}" "${PLATFORM_HEADER_DEST}"
+    )
+    message(STATUS "Generated macos_platform.h")
+    include_directories(BEFORE SYSTEM "${CMAKE_BINARY_DIR}/include")
 endif()
 
 # Platform-specific output directory setup
