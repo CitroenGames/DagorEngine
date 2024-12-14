@@ -1,2 +1,0 @@
-/usr/bin/ar qc ../../lib/Rel/libEASTL.a CMakeFiles/EASTL.dir/source/allocator_eastl.cpp.o CMakeFiles/EASTL.dir/source/assert.cpp.o CMakeFiles/EASTL.dir/source/atomic.cpp.o CMakeFiles/EASTL.dir/source/fixed_pool.cpp.o CMakeFiles/EASTL.dir/source/hashtable.cpp.o CMakeFiles/EASTL.dir/source/intrusive_list.cpp.o CMakeFiles/EASTL.dir/source/numeric_limits.cpp.o CMakeFiles/EASTL.dir/source/red_black_tree.cpp.o CMakeFiles/EASTL.dir/source/string.cpp.o CMakeFiles/EASTL.dir/source/thread_support.cpp.o
-/usr/bin/ranlib ../../lib/Rel/libEASTL.a
